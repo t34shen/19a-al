@@ -40,7 +40,7 @@ int quick(int array[], int k, int low, int high){
         return quick(array, k, low, base);
     }else if (base < k-1){
         //最终反正也是k，因为k是与标号有关是跟全局的数组挂钩啊
-        return quick(array, k, base + 1, high);
+        return quick(array, k, base + 1, high); 
     }
 }
 
