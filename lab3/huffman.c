@@ -2,6 +2,7 @@
 #include <string.h>
 #include <math.h>
 #define N 26
+#define S 1500
 #include "readwords.c"
 
 /*define the sturct of huffman tree*/
@@ -71,7 +72,7 @@ void buildH(HTNODE H[], int length){
 /*define the huffmanCode table*/
 typedef struct{
 	char ch;
-	char bits[61+1];
+	char bits[62+1];
 }codeNode;
 
 /*input: HuffmanTree output: Hufftable*/
@@ -105,10 +106,63 @@ void printTable(codeNode T[], int length){
 		printf("%c:  %s\n", T[i].ch, T[i].bits);
 	}
 }
+
+/*write data from a plain .txt to a new encoding .txt*/
+void HuffWrite(FILE *origin, FILE *target, codeNode T[], int length){	
+	/*if we meet '10', the text would change line and can't get by a single fgets*/
+	char buf[S];
+	while (fgets(buf, S, origin) != NULL){
+		//printf("then?\n");
+		for(int i = 0; i < S; i++){
+			int j;
+			for(j = 0; j < length; j++){
+				/*again!!! get wrong with '==' and '='*/
+				if(T[j].ch == buf[i]){
+					break; 
+				}
+			}
+			//printf("%s\t", T[j].bits);
+			if(buf[i] == 10){
+				fprintf(target, "%s", T[j].bits);
+				break;
+			/* a confusing situation!
+			 * if 
+			 */
+			}else{
+				fprintf(target, "%s", T[j].bits);
+			}
+			
+		}
+	}
+}
+
+/*transform the encoding file back to text form*/
+void decodeH(FILE *code, FILE *restore, codeNode T[], HTNODE H[], int length, int letter[]){
+	char buf[40 * S];
+	int len = 2 * length - 2;
+	while(fgets(buf, 40 * S, code) != NULL){
+		int parent = len;
+		for(int i = 0; i < 40*S; i++){
+			if(buf[i] == NULL){
+				return;
+			}
+			if(buf[i] == '1'){
+				parent = H[parent].rchild;
+			}else if(buf[i] == '0'){
+				parent = H[parent].lchild;
+			}
+			if(H[parent].lchild == -1){
+				//printf("parent: %c\t", letter[parent]);
+				fprintf(restore, "%c", letter[parent]);
+				parent = len;
+			}
+		}
+	}
+}
 /*****************************************************
- main funtion:
- open file - distill data - build huffman tree - get huffman code
- - compress txt - calculate rates - decode&compare
+ * main funtion:
+ * open file - distill data - build huffman tree - get huffman code
+ * - compress txt - calculate rates - decode&compare
  *****************************************************/
  
 int main(void){
@@ -146,7 +200,6 @@ int main(void){
 			count++;
 		}
 	}
-	//printf("summary: %f\n", summary);
 	//printH(HuffmanT, length, word); 
 	/*then implement huffman algorithm get the huffman table*/
 	buildH(HuffmanT, length);
@@ -156,4 +209,19 @@ int main(void){
 	codeNode HuffTable[length];
 	buildTable(HuffmanT, HuffTable, length, word);
 	printTable(HuffTable, length);
+	
+	/*transform the test.txt into a compressed file*/
+	fclose(file);
+	/* OMG!! previews file pointer has come to the end!
+	 * I need to open a new fp to iterate the file!
+	 */
+	FILE *fp = fopen("test.txt", "r");
+	FILE *fpWrite = fopen("comp.txt", "w");
+	HuffWrite(fp, fpWrite, HuffTable, length);
+	fclose(fpWrite);
+	
+	/*the last part, to decode a encode text and restore the text*/
+	FILE *fpCode = fopen("comp.txt", "r");
+	FILE *fpDecode = fopen("restore.txt", "w");
+	decodeH(fpCode, fpDecode, HuffTable, HuffmanT, length, word);
 }

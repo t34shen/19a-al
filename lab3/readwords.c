@@ -20,6 +20,8 @@ void getTxtData(FILE *fp, double rate[]){
 	while (fgets(buf, S, fp) != NULL){
 		for(int i = 0; i < S; i++){
 			if(buf[i] == 10){
+				sum += 1;
+				rate[buf[i]] += 1;
 				break;
 			}
 			sum += 1;
@@ -33,7 +35,7 @@ void getTxtData(FILE *fp, double rate[]){
 		rate[i] = rate[i] / sum * 100;
 		summary += rate[i];
 	}
-	printf("summary: %f\n", summary);
+	//printf("summary: %f\n", summary);
 //	/*exam the rate array*/
 //	for(int i = 0; i < 127; i++){
 //		/*can't use %d to printf a double!!! remenber!*/
