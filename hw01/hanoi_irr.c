@@ -1,6 +1,6 @@
-#include <stdio.h>
+   #include <stdio.h>
 #define MAXPLATE 100
-#define COUNT 20
+#define COUNT 10
 /* two main data struct in the pr */
 /* record every bar's every plate number */
 typedef struct BAR{
@@ -27,6 +27,14 @@ typedef struct PREV_PROC{
 	int count[4];
 }prev_proc;
 
+/* print prev */
+void printPrev(prev_proc prev){
+	printf("previous operations");
+	for(int i = 0; i < 4; i++){
+		printf("%d\t", prev.count[i]);
+	}
+	printf("\n");
+}
 /*print bar in three column*/
 void printBar(bar b[]){
 	bar b1, b2, b3;
@@ -46,6 +54,7 @@ void printBar(bar b[]){
 		len = l3; 
 		
 	printf("three bars: \n");
+	printf("    \tbar1\tbar2\tbar3\n");
 	/*print in three row*/
 	for(int i = len - 1; i > -1; i--){
 		printf("row %d\t", i);
@@ -68,7 +77,10 @@ void printBar(bar b[]){
 }
 
 int useTwice(prev_proc prev){
-	int b1, b2, b3;
+	//I ! forgot to instantiate the int value before using them to calculate 
+	int b1 = 0;
+	int b2 = 0;
+	int b3 = 0;
 	for(int i = 0; i < 4; i++){
 		if(prev.count[i] == 1){
 			b1++;
@@ -91,7 +103,7 @@ int useTwice(prev_proc prev){
 
 /* return 0/1, 
  * 1 means the order is right b1 top plate < b2's
- * 2 means the order should be reversed
+ * 0 means the order should be reversed
  */
 int bigPlate(bar b1, bar b2){
 	/*check if there's plate on both bar*/
@@ -158,36 +170,52 @@ void hanoi(bar b[], prev_proc prev){
 	/* first we make sure the length of b1 should bigger than 3
 	 * so, we ignore the situation which COUNT is less than 3
 	 */
-	 while(b[1].length != 0 && b[2].length != 0){
-	 	/*check the twice*/
-	 	int twice = useTwice(prev);
-	 	int last = prev.count[4];
+	int k = 0; 
+	int start, dest, twice, last;
+	while(b[1].length != 0 || b[2].length != 0){
+		printPrev(prev);
+	 	k++;
+	 	printf("%d round: \n", k);
+		/*check the twice*/
+	 	twice = useTwice(prev);
+	 	last = prev.count[3];
+	 	printf("twice: %d, last: %d\n", twice, last);
 	 	/*get the new destination and the start*/
-		int start, dest;
 	 	for(int i = 1; i < 4; i++){
-	 		if(i != last && i != last){
+	 		if(i != last && i != twice){
 	 			start = i;
+	 			/*sily enough to put 'break' outside the if-loop*/
+	 			break;
 			}
-			break;
 		}
+		//printf("here\t");
 		for(int i = 1; i < 4; i++){
-		 	if(i != last && i != last && i != start){
+			//sometime we should check well after we arbitrarily use another block of code 
+		 	if(i != twice && i != start){
 		 		dest = i;
+		 		break;
 			}
-			break;
+		}
+		int tem;
+		if(!bigPlate(b[start], b[dest])){
+			tem = start;
+			start = dest;
+			dest = tem;
 		}
 		/* edit of prev */
 		prev.count[0] = prev.count[2];
 		prev.count[1] = prev.count[3];
 		prev.count[2] = start;
 		prev.count[3] = dest;
-		
+		printPrev(prev);
+		//printf("there\t");
+		printf("start: %d, dest: %d\n", start, dest);
 		/* add & delete */
 		b[dest] = add(topp(b[start]), b[dest]);
 		b[start] = del(b[start]);
 		printBar(b);
+		//printf("this\t");
 	}
-	
 	
 	return;
 }
@@ -206,7 +234,7 @@ int main(void){
 	//small test
 //	printBar(bara);
 //	bara[2] = add(topp(bara[1]), bara[2]); bara[1] = del(bara[1]);
-	printBar(bara);
+	//printBar(bara);
 	
 	/* irretate hanoi */
 	hanoi(bara, prev);
